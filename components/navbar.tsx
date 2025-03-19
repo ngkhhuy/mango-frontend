@@ -66,7 +66,7 @@ export default function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center space-x-2 rounded-full p-1 hover:bg-gray-100 transition-colors">
                     <Avatar className="h-8 w-8 cursor-pointer">
-                      <AvatarFallback className="bg-gray-200 text-gray-700">JD</AvatarFallback>
+                      <AvatarFallback className="bg-gray-200 text-gray-700">KH</AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium text-gray-700 hidden md:inline-block">Khanh Huy</span>
                   </button>
