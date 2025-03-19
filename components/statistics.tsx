@@ -11,7 +11,7 @@ export default function Statistics({ stats }: StatisticsProps) {
       <div className="grid grid-cols-2 gap-2">
         <Card>
           <CardHeader className="p-3 pb-0">
-            <CardDescription>Total Count</CardDescription>
+            <CardDescription>Tổng số</CardDescription>
           </CardHeader>
           <CardContent className="p-3 pt-1">
             <p className="text-2xl font-bold text-amber-700">{stats.totalCount}</p>
@@ -20,7 +20,7 @@ export default function Statistics({ stats }: StatisticsProps) {
 
         <Card>
           <CardHeader className="p-3 pb-0">
-            <CardDescription>Avg Weight</CardDescription>
+            <CardDescription>Cân nặng TB</CardDescription>
           </CardHeader>
           <CardContent className="p-3 pt-1">
             <p className="text-2xl font-bold text-amber-700">{stats.averageWeight.toFixed(0)}g</p>
@@ -30,7 +30,7 @@ export default function Statistics({ stats }: StatisticsProps) {
 
       <Card>
         <CardHeader className="p-3 pb-1">
-          <CardDescription>Type Distribution</CardDescription>
+          <CardDescription>Phân bố theo loại</CardDescription>
         </CardHeader>
         <CardContent className="p-3 pt-1">
           <div className="space-y-2">

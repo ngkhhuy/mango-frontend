@@ -30,7 +30,7 @@ export default function CategorySelector({ selectedType, onSelectType, mangoCoun
           onClick={() => onSelectType(type)}
         >
           <div className="flex justify-between w-full">
-            <span>{type}</span>
+            <span>{type === "All" ? "Tất cả" : type}</span>
             <span className="bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full text-xs">{mangoCounts[type]}</span>
           </div>
         </Button>

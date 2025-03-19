@@ -49,7 +49,7 @@ export default function MangoList({ mangoes }: MangoListProps) {
           <div className="relative h-64">
             <Image
               src={mango.imageUrl}
-              alt={`Mango ${mango._id}`}
+              alt={`Xoài ${mango._id}`}
               fill
               className="object-cover"
             />
@@ -67,11 +67,11 @@ export default function MangoList({ mangoes }: MangoListProps) {
               {/* Bottom section */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-white">
-                  <span className="text-sm font-medium">Weight:</span>
+                  <span className="text-sm font-medium">Cân nặng:</span>
                   <span className="text-sm">{mango.weight}g</span>
                 </div>
                 <div className="flex justify-between items-center text-white">
-                  <span className="text-sm font-medium">Volume:</span>
+                  <span className="text-sm font-medium">Thể tích:</span>
                   <span className="text-sm">{mango.volume}cm³</span>
                 </div>
               </div>

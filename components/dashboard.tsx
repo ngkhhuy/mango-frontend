@@ -98,7 +98,7 @@ export default function Dashboard({ mangoes }: DashboardProps) {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-md p-4 sticky top-4">
-            <h2 className="text-xl font-semibold text-amber-800 mb-4">Categories</h2>
+            <h2 className="text-xl font-semibold text-amber-800 mb-4">Danh mục</h2>
             <CategorySelector
               selectedType={selectedType}
               onSelectType={setSelectedType}
@@ -111,7 +111,7 @@ export default function Dashboard({ mangoes }: DashboardProps) {
             />
 
             <div className="mt-8">
-              <h2 className="text-xl font-semibold text-amber-800 mb-4">Statistics</h2>
+              <h2 className="text-xl font-semibold text-amber-800 mb-4">Thống kê</h2>
               <Statistics stats={calculateStats()} />
             </div>
 
@@ -121,7 +121,7 @@ export default function Dashboard({ mangoes }: DashboardProps) {
               disabled={filteredMangoes.length === 0}
             >
               <Download className="mr-2 h-4 w-4" />
-              Export {selectedType} Mangoes
+              Xuất {selectedType === "All" ? "tất cả" : selectedType} xoài
             </Button>
           </div>
         </div>

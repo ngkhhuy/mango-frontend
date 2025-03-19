@@ -68,7 +68,7 @@ export default function ClassificationPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Mango Classification</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">Phân loại xoài</h1>
         <div className="flex flex-wrap gap-2">
           {types.map((type) => (
             <Button
@@ -77,7 +77,7 @@ export default function ClassificationPage() {
               variant={selectedType === type ? "default" : "outline"}
               className={selectedType === type ? "" : getTypeColor(type)}
             >
-              {type}
+              {type === "All" ? "Tất cả" : type}
             </Button>
           ))}
         </div>
@@ -89,14 +89,14 @@ export default function ClassificationPage() {
         <div className="text-center text-red-600">{error}</div>
       ) : filteredMangoes.length === 0 ? (
         <div className="text-center text-gray-600">
-          No mangoes found for the selected type.
+          Không tìm thấy xoài cho loại đã chọn.
         </div>
       ) : (
         <MangoList mangoes={filteredMangoes} />
       )}
 
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Statistics</h2>
+        <h2 className="text-xl font-semibold mb-4">Thống kê</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {types.slice(1).map((type) => {
             const count = mangoes.filter((m) => m.classify === type).length
@@ -104,7 +104,7 @@ export default function ClassificationPage() {
               <div key={type} className="p-4 border rounded-lg">
                 <Badge className={getTypeColor(type)}>{type}</Badge>
                 <p className="mt-2 text-2xl font-bold">{count}</p>
-                <p className="text-sm text-gray-600">mangoes</p>
+                <p className="text-sm text-gray-600">xoài</p>
               </div>
             )
           })}

@@ -120,12 +120,12 @@ export default function StatisticsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Mango Statistics</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">Thống kê xoài</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Total Mangoes</CardTitle>
+            <CardTitle>Tổng số xoài</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.totalCount}</p>
@@ -133,7 +133,7 @@ export default function StatisticsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Average Weight</CardTitle>
+            <CardTitle>Cân nặng trung bình</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.averageWeight.toFixed(2)}g</p>
@@ -141,7 +141,7 @@ export default function StatisticsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Average Volume</CardTitle>
+            <CardTitle>Thể tích trung bình</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.averageVolume.toFixed(2)}cm³</p>
@@ -149,14 +149,14 @@ export default function StatisticsPage() {
         </Card>
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Classification Analysis</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Distribution by Type</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[300px]">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Phân tích phân loại</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <h3 className="text-lg font-medium mb-4">Phân bố theo loại</h3>
+            <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -175,41 +175,42 @@ export default function StatisticsPage() {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Detailed Analysis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(stats.typeDistribution).map(([type, data]) => (
-                  <div key={type} className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <Badge variant="outline">{type}</Badge>
-                      <span className="text-sm font-medium">{data.count} mangoes</span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Phân tích chi tiết</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <h3 className="text-lg font-medium mb-4">Phân bố cân nặng</h3>
+            <div className="space-y-4">
+              {Object.entries(stats.typeDistribution).map(([type, data]) => (
+                <div key={type} className="p-4 border rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <Badge variant="outline">{type}</Badge>
+                    <span className="text-sm font-medium">{data.count} mangoes</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-600">Percentage</p>
+                      <p className="font-medium">{data.percentage.toFixed(1)}%</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-600">Percentage</p>
-                        <p className="font-medium">{data.percentage.toFixed(1)}%</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Avg Weight</p>
-                        <p className="font-medium">{data.averageWeight.toFixed(1)}g</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Avg Volume</p>
-                        <p className="font-medium">{data.averageVolume.toFixed(1)}cm³</p>
-                      </div>
+                    <div>
+                      <p className="text-gray-600">Avg Weight</p>
+                      <p className="font-medium">{data.averageWeight.toFixed(1)}g</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Avg Volume</p>
+                      <p className="font-medium">{data.averageVolume.toFixed(1)}cm³</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
