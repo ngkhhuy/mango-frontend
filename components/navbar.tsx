@@ -34,7 +34,7 @@ export default function Navbar() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
-                <span className="text-xl font-bold text-gray-800 dark:text-gray-100">Quản lý chất lượng quả xoài</span>
+                <span className="text-xl font-bold text-gray-800 dark:text-gray-100">Mango Control</span>
               </Link>
             </div>
 
