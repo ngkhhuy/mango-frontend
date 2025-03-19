@@ -13,7 +13,7 @@ interface CategorySelectorProps {
 }
 
 export default function CategorySelector({ selectedType, onSelectType, mangoCounts }: CategorySelectorProps) {
-  const categories: (MangoType | "All")[] = ["All", "Type 1", "Type 2", "Type 3"]
+  const categories: (MangoType | "All")[] = ["All", "Type 1", "Type 2"]
 
   return (
     <div className="flex flex-col space-y-2">

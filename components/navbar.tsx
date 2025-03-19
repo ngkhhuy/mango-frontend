@@ -68,7 +68,7 @@ export default function Navbar() {
                     <Avatar className="h-8 w-8 cursor-pointer">
                       <AvatarFallback className="bg-gray-200 text-gray-700">JD</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium text-gray-700 hidden md:inline-block">John Doe</span>
+                    <span className="text-sm font-medium text-gray-700 hidden md:inline-block">Khanh Huy</span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
