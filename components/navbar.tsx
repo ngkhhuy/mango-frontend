@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { Home, ListFilter, BarChart3, User, LogOut, Settings } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,111 +14,168 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useState } from "react"
-import UserProfileDialog from "./user-profile-dialog"
-import { ThemeToggle } from "./theme-toggle"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
+import {
+  BarChart3,
+  Home,
+  ListFilter,
+  LogOut,
+  Settings,
+  User,
+} from "lucide-react"
+
+interface UserData {
+  id: string;
+  name: string;
+  username: string;
+  avatar?: string;
+}
 
 export default function Navbar() {
   const pathname = usePathname()
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [user, setUser] = useState<UserData | null>(null)
+  const [isClient, setIsClient] = useState(false)
 
-  const navItems = [
-    { href: "/", label: "Trang chủ", icon: Home },
-    { href: "/classification", label: "Phân loại", icon: ListFilter },
-    { href: "/statistics", label: "Thống kê", icon: BarChart3 },
+  useEffect(() => {
+    setIsClient(true)
+    // Kiểm tra xem người dùng đã đăng nhập chưa
+    const checkAuth = () => {
+      try {
+        const userData = localStorage.getItem("user") || sessionStorage.getItem("user")
+        if (userData) {
+          // Đảm bảo userData là JSON hợp lệ trước khi parse
+          try {
+            const parsedUser = JSON.parse(userData);
+            // Đảm bảo user có thuộc tính name
+            if (parsedUser && typeof parsedUser === 'object') {
+              // Đặt giá trị mặc định cho các trường cần thiết nếu không tồn tại
+              if (!parsedUser.name) parsedUser.name = "User";
+              if (!parsedUser.username) parsedUser.username = "user";
+              if (!parsedUser.id) parsedUser.id = "unknown";
+              setUser(parsedUser);
+            }
+          } catch (parseError) {
+            console.error("Error parsing user data:", parseError);
+            // Đặt user mặc định nếu không parse được
+            setUser({ id: "unknown", name: "User", username: "user" });
+          }
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error)
+      }
+    }
+
+    checkAuth()
+    // Lắng nghe sự kiện storage để cập nhật UI khi đăng nhập/đăng xuất
+    window.addEventListener('storage', checkAuth)
+    return () => window.removeEventListener('storage', checkAuth)
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken")
+    sessionStorage.removeItem("authToken")
+    localStorage.removeItem("user")
+    sessionStorage.removeItem("user")
+    setUser(null)
+    window.location.href = "/login"
+  }
+
+  const links = [
+    {
+      name: "Trang chủ",
+      href: "/",
+      icon: Home,
+    },
+    {
+      name: "Phân loại",
+      href: "/classification",
+      icon: ListFilter,
+    },
+    {
+      name: "Thống kê",
+      href: "/statistics",
+      icon: BarChart3,
+    },
   ]
 
   return (
-    <>
-      <nav className="border-b bg-white shadow-sm dark:bg-gray-900 dark:border-gray-800">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <span className="text-xl font-bold text-gray-800 dark:text-gray-100">Mango Control</span>
-              </Link>
-            </div>
-
-            <div className="hidden md:flex items-center space-x-4">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      pathname === item.href 
-                        ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100" 
-                        : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800",
-                    )}
-                  >
-                    <Icon className="mr-2 h-4 w-4" />
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <ThemeToggle />
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center space-x-2 rounded-full p-1 hover:bg-gray-100 transition-colors">
-                    <Avatar className="h-8 w-8 cursor-pointer">
-                      <AvatarFallback className="bg-gray-200 text-gray-700">KH</AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium text-gray-700 hidden md:inline-block">Khanh Huy</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setIsProfileOpen(true)} className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Edit Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile navigation */}
-        <div className="md:hidden border-t">
-          <div className="grid grid-cols-3">
-            {navItems.map((item) => {
-              const Icon = item.icon
+    <nav className="border-b bg-background">
+      <div className="container flex h-16 items-center px-4">
+        {/* Logo bên trái */}
+        <Link href="/" className="text-lg font-bold mr-4">
+          Mango System
+        </Link>
+        
+        {/* Menu chính ở giữa */}
+        <div className="flex-1 flex justify-center">
+          <div className="flex">
+            {links.map((link) => {
+              const LinkIcon = link.icon
               return (
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  key={link.href}
+                  href={link.href}
                   className={cn(
-                    "flex flex-col items-center py-2 px-1 text-xs font-medium transition-colors",
-                    pathname === item.href ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50",
+                    "flex items-center px-4 py-2 text-base font-medium transition-colors hover:text-primary",
+                    pathname === link.href
+                      ? "text-primary"
+                      : "text-muted-foreground"
                   )}
                 >
-                  <Icon className="h-5 w-5 mb-1" />
-                  {item.label}
+                  <LinkIcon className="mr-2 h-5 w-5" />
+                  {link.name}
                 </Link>
               )
             })}
           </div>
         </div>
-      </nav>
-
-      <UserProfileDialog open={isProfileOpen} onOpenChange={setIsProfileOpen} />
-    </>
+        
+        {/* Các nút bên phải */}
+        <div className="flex items-center space-x-4">
+          <ThemeToggle />
+          {isClient && (
+            <>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel className="text-base">Tài khoản của tôi</DropdownMenuLabel>
+                    <DropdownMenuItem className="flex items-center text-base">
+                      <User className="mr-2 h-5 w-5" />
+                      <span>{user.name}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="flex items-center text-base">
+                      <Settings className="mr-2 h-5 w-5" />
+                      <span>Cài đặt</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center text-base" onClick={handleLogout}>
+                      <LogOut className="mr-2 h-5 w-5" />
+                      <span>Đăng xuất</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button asChild className="text-base">
+                  <Link href="/login">Đăng nhập</Link>
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </nav>
   )
 }
 

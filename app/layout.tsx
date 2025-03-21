@@ -2,9 +2,17 @@ import type React from "react"
 import "@/app/globals.css"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
-import Navbar from "@/components/navbar"
+import { Toaster } from "sonner"
+import { AuthProvider } from "@/contexts/auth-context"
+import AuthCheck from "@/components/auth-check"
+import NavbarWrapper from "@/components/navbar-wrapper"
 
 const inter = Inter({ subsets: ["latin"] })
+
+export const metadata = {
+  title: 'Hệ thống phân loại xoài',
+  description: 'Hệ thống phân loại, thống kê và đánh giá chất lượng xoài'
+};
 
 export default function RootLayout({
   children,
@@ -12,24 +20,23 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen bg-background`}>
+    <html lang="vi" suppressHydrationWarning>
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
-          enableSystem={false}
+          enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          <main>{children}</main>
+          <AuthProvider>
+            <NavbarWrapper />
+            <AuthCheck>
+              {children}
+            </AuthCheck>
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
   )
 }
-
-import './globals.css'
-
-export const metadata = {
-      generator: 'v0.dev'
-    };

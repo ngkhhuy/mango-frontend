@@ -1,19 +1,25 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { getMangoes } from "@/lib/api"
 import type { Mango } from "@/types/mango"
 import MangoList from "@/components/mango-list"
-import { Loading } from "@/components/ui/loading"
 import { Button } from "@/components/ui/button"
+import { Loading } from "@/components/ui/loading"
+import ProtectedRoute from "@/components/protected-route"
 import { Badge } from "@/components/ui/badge"
 import { Download } from "lucide-react"
 
-export default function ClassificationPage() {
+// Component chính được bọc trong Suspense
+function ClassificationContent() {
+  const searchParams = useSearchParams()
   const [mangoes, setMangoes] = useState<Mango[]>([])
-  const [selectedType, setSelectedType] = useState<string>("All")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedType, setSelectedType] = useState<string>(
+    searchParams?.get("type") || "All"
+  )
 
   useEffect(() => {
     const fetchMangoes = async () => {
@@ -21,7 +27,7 @@ export default function ClassificationPage() {
         const data = await getMangoes()
         setMangoes(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch mangoes")
+        setError(err instanceof Error ? err.message : "Không thể tải dữ liệu xoài")
       } finally {
         setLoading(false)
       }
@@ -30,87 +36,106 @@ export default function ClassificationPage() {
     fetchMangoes()
   }, [])
 
-  const filteredMangoes = selectedType === "All" ? mangoes : mangoes.filter((mango) => mango.classify === selectedType)
+  // Lọc xoài theo loại đã chọn
+  const filteredMangoes = selectedType === "All"
+    ? mangoes
+    : mangoes.filter(mango => mango.classify === selectedType)
 
-  const exportMangoes = () => {
+  // Xuất dữ liệu ra file CSV
+  const exportToCSV = () => {
+    // Chỉ xuất dữ liệu đã lọc
     const dataToExport = filteredMangoes
-    const headers = Object.keys(dataToExport[0]).join(",")
-    const csvData = dataToExport.map((mango) => Object.values(mango).join(",")).join("\n")
-    const csv = `${headers}\n${csvData}`
-
-    const blob = new Blob([csv], { type: "text/csv" })
+    
+    // Tạo header cho CSV
+    const headers = ['ID', 'Tên', 'Loại', 'Cân nặng (g)', 'Thể tích (cm³)', 'Ngày tạo']
+    
+    // Chuyển đổi dữ liệu thành định dạng CSV
+    const csvRows = []
+    csvRows.push(headers.join(','))
+    
+    dataToExport.forEach(mango => {
+      const row = [
+        mango.id,
+        mango.classify || 'N/A',
+        mango.weight || '0',
+        mango.volume || '0',
+        mango.createdAt || 'N/A'
+      ]
+      csvRows.push(row.join(','))
+    })
+    
+    // Tạo blob và tải xuống
+    const csvString = csvRows.join('\n')
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.setAttribute("hidden", "")
-    a.setAttribute("href", url)
-    a.setAttribute("download", `mangoes-${selectedType.toLowerCase().replace(" ", "-")}.csv`)
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    
+    link.setAttribute('href', url)
+    link.setAttribute('download', `xoai-${selectedType.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.csv`)
+    link.style.visibility = 'hidden'
+    
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
-  // Helper function to get color for mango type
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "Type 1":
-        return "bg-green-100 text-green-800"
-      case "Type 2":
-        return "bg-yellow-100 text-yellow-800"
-      case "Extra Class":
-        return "bg-blue-100 text-blue-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
+  // Danh sách các loại xoài để lọc, đã sắp xếp theo thứ tự yêu cầu
+  const filterTypes = ["All", "Type 1", "Type 2", "Extra Class"]
+
+  if (loading) {
+    return <Loading />
   }
 
-  const types = ["All", "Type 1", "Type 2", "Extra Class"]
+  if (error) {
+    return <div className="text-center text-red-600">{error}</div>
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Phân loại xoài</h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 className="text-3xl font-bold mb-4 md:mb-0">Phân loại xoài</h1>
+        
         <div className="flex flex-wrap gap-2">
-          {types.map((type) => (
+          {filterTypes.map(type => (
             <Button
               key={type}
-              onClick={() => setSelectedType(type)}
               variant={selectedType === type ? "default" : "outline"}
-              className={selectedType === type ? "" : getTypeColor(type)}
+              onClick={() => setSelectedType(type)}
+              className="rounded-full"
             >
-              {type === "All" ? "Tất cả" : type}
+              {type}
             </Button>
           ))}
-        </div>
-      </header>
-
-      {loading ? (
-        <Loading />
-      ) : error ? (
-        <div className="text-center text-red-600">{error}</div>
-      ) : filteredMangoes.length === 0 ? (
-        <div className="text-center text-gray-600">
-          Không tìm thấy xoài cho loại đã chọn.
-        </div>
-      ) : (
-        <MangoList mangoes={filteredMangoes} />
-      )}
-
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Thống kê</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {types.slice(1).map((type) => {
-            const count = mangoes.filter((m) => m.classify === type).length
-            return (
-              <div key={type} className="p-4 border rounded-lg">
-                <Badge className={getTypeColor(type)}>{type}</Badge>
-                <p className="mt-2 text-2xl font-bold">{count}</p>
-                <p className="text-sm text-gray-600">xoài</p>
-              </div>
-            )
-          })}
+          
+          <Button 
+            variant="outline" 
+            className="ml-2 flex items-center gap-1"
+            onClick={exportToCSV}
+          >
+            <Download className="h-4 w-4" />
+            Xuất CSV
+          </Button>
         </div>
       </div>
+
+      <div className="mb-4">
+        <Badge variant="outline" className="text-sm">
+          {filteredMangoes.length} xoài {selectedType !== "All" ? `loại ${selectedType}` : ""}
+        </Badge>
+      </div>
+
+      <MangoList mangoes={filteredMangoes} />
     </div>
+  )
+}
+
+export default function ClassificationPage() {
+  return (
+    <ProtectedRoute>
+      <Suspense fallback={<Loading />}>
+        <ClassificationContent />
+      </Suspense>
+    </ProtectedRoute>
   )
 }
 

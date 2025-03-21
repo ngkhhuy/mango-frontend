@@ -1,45 +1,44 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { getMangoes } from '@/lib/api'
-import type { Mango } from '@/types/mango'
+import { useEffect, useState } from "react"
+import { getMangoes } from "@/lib/api"
+import type { Mango } from "@/types/mango"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { Loading } from '@/components/ui/loading'
-import { Badge } from "@/components/ui/badge"
-
-interface Stats {
-  totalCount: number
-  averageWeight: number
-  averageVolume: number
-  typeDistribution: {
-    [key: string]: {
-      count: number
-      percentage: number
-      averageWeight: number
-      averageVolume: number
-    }
-  }
-  weightRanges: {
-    range: string
-    count: number
-  }[]
-}
+import { Loading } from "@/components/ui/loading"
+import ProtectedRoute from "@/components/protected-route"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, Label } from 'recharts'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28']
 
-export default function StatisticsPage() {
+// Định nghĩa kiểu dữ liệu cho thống kê theo loại
+interface TypeStats {
+  type: string;
+  count: number;
+  percentage: number;
+  avgWeight: number;
+  avgVolume: number;
+}
+
+function StatisticsContent() {
   const [mangoes, setMangoes] = useState<Mango[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState({
+    totalCount: 0,
+    avgWeight: 0,
+    avgVolume: 0,
+    typeStats: [] as TypeStats[],
+    pieData: [] as { name: string; value: number }[]
+  })
 
   useEffect(() => {
     const fetchMangoes = async () => {
       try {
         const data = await getMangoes()
         setMangoes(data)
+        calculateStatistics(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch mangoes')
+        setError(err instanceof Error ? err.message : "Không thể tải dữ liệu xoài")
       } finally {
         setLoading(false)
       }
@@ -48,162 +47,210 @@ export default function StatisticsPage() {
     fetchMangoes()
   }, [])
 
-  const calculateStats = (mangoes: Mango[]): Stats => {
-    const totalCount = mangoes.length
-    const totalWeight = mangoes.reduce((sum, mango) => sum + mango.weight, 0)
-    const totalVolume = mangoes.reduce((sum, mango) => sum + mango.volume, 0)
-    const averageWeight = totalCount ? totalWeight / totalCount : 0
-    const averageVolume = totalCount ? totalVolume / totalCount : 0
-
-    // Detailed type distribution
-    const typeDistribution: Stats['typeDistribution'] = {}
-    mangoes.forEach((mango) => {
-      if (!typeDistribution[mango.classify]) {
-        typeDistribution[mango.classify] = {
-          count: 0,
-          percentage: 0,
-          averageWeight: 0,
-          averageVolume: 0,
-        }
-      }
-      typeDistribution[mango.classify].count++
-    })
-
-    // Calculate percentages and averages for each type
-    Object.keys(typeDistribution).forEach((type) => {
-      const typeData = typeDistribution[type]
-      const mangosOfType = mangoes.filter(m => m.classify === type)
-      
-      typeData.percentage = (typeData.count / totalCount) * 100
-      typeData.averageWeight = mangosOfType.reduce((sum, m) => sum + m.weight, 0) / typeData.count
-      typeData.averageVolume = mangosOfType.reduce((sum, m) => sum + m.volume, 0) / typeData.count
-    })
-
-    // Weight ranges calculation
-    const weights = mangoes.map(m => m.weight)
-    const minWeight = Math.min(...weights)
-    const maxWeight = Math.max(...weights)
-    const range = maxWeight - minWeight
-    const rangeSize = range / 4
-
-    const weightRanges = [
-      { range: `${minWeight.toFixed(0)}-${(minWeight + rangeSize).toFixed(0)}g`, count: 0 },
-      { range: `${(minWeight + rangeSize).toFixed(0)}-${(minWeight + rangeSize * 2).toFixed(0)}g`, count: 0 },
-      { range: `${(minWeight + rangeSize * 2).toFixed(0)}-${(minWeight + rangeSize * 3).toFixed(0)}g`, count: 0 },
-      { range: `${(minWeight + rangeSize * 3).toFixed(0)}-${maxWeight.toFixed(0)}g`, count: 0 },
-    ]
-
-    mangoes.forEach((mango) => {
-      if (mango.weight <= minWeight + rangeSize) weightRanges[0].count++
-      else if (mango.weight <= minWeight + rangeSize * 2) weightRanges[1].count++
-      else if (mango.weight <= minWeight + rangeSize * 3) weightRanges[2].count++
-      else weightRanges[3].count++
-    })
-
-    return {
-      totalCount,
-      averageWeight,
-      averageVolume,
-      typeDistribution,
-      weightRanges,
+  const calculateStatistics = (data: Mango[]) => {
+    if (!Array.isArray(data) || data.length === 0) {
+      setStats({
+        totalCount: 0,
+        avgWeight: 0,
+        avgVolume: 0,
+        typeStats: [],
+        pieData: []
+      })
+      return
     }
+
+    const totalCount = data.length
+    
+    // Tính trọng lượng trung bình tổng thể
+    const totalWeight = data.reduce((sum, mango) => {
+      const weight = typeof mango.weight === 'number' ? mango.weight : 0
+      return sum + weight
+    }, 0)
+    const avgWeight = totalCount > 0 ? totalWeight / totalCount : 0
+    
+    // Tính thể tích trung bình tổng thể
+    const totalVolume = data.reduce((sum, mango) => {
+      const volume = typeof mango.volume === 'number' ? mango.volume : 0
+      return sum + volume
+    }, 0)
+    const avgVolume = totalCount > 0 ? totalVolume / totalCount : 0
+    
+    // Nhóm xoài theo loại
+    const typeGroups: Record<string, Mango[]> = {}
+    data.forEach(mango => {
+      const type = mango.classify || 'Unknown'
+      if (!typeGroups[type]) {
+        typeGroups[type] = []
+      }
+      typeGroups[type].push(mango)
+    })
+
+    // Tính toán thống kê cho từng loại
+    const typeStats: TypeStats[] = Object.entries(typeGroups).map(([type, mangoes]) => {
+      const count = mangoes.length
+      const percentage = (count / totalCount) * 100
+      
+      // Tính trọng lượng trung bình
+      const typeTotalWeight = mangoes.reduce((sum, mango) => {
+        const weight = typeof mango.weight === 'number' ? mango.weight : 0
+        return sum + weight
+      }, 0)
+      const typeAvgWeight = count > 0 ? typeTotalWeight / count : 0
+      
+      // Tính thể tích trung bình
+      const typeTotalVolume = mangoes.reduce((sum, mango) => {
+        const volume = typeof mango.volume === 'number' ? mango.volume : 0
+        return sum + volume
+      }, 0)
+      const typeAvgVolume = count > 0 ? typeTotalVolume / count : 0
+      
+      return {
+        type,
+        count,
+        percentage,
+        avgWeight: typeAvgWeight,
+        avgVolume: typeAvgVolume
+      }
+    })
+    
+    // Sắp xếp theo số lượng giảm dần
+    typeStats.sort((a, b) => b.count - a.count)
+    
+    // Dữ liệu cho biểu đồ tròn
+    const pieData = typeStats.map(stat => ({
+      name: stat.type,
+      value: stat.count
+    }))
+    
+    setStats({
+      totalCount,
+      avgWeight,
+      avgVolume,
+      typeStats,
+      pieData
+    })
   }
 
-  if (loading) return <Loading />
-  if (error) return <div className="text-center text-red-600">{error}</div>
+  if (loading) {
+    return <Loading />
+  }
 
-  const stats = calculateStats(mangoes)
-  const pieData = Object.entries(stats.typeDistribution).map(([type, data]) => ({
-    name: type,
-    value: data.count
-  }))
+  if (error) {
+    return <div className="text-center text-red-600">{error}</div>
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Thống kê xoài</h1>
+      <h1 className="text-3xl font-bold mb-8">Thống kê xoài</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
-          <CardHeader>
-            <CardTitle>Tổng số xoài</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Tổng số xoài</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stats.totalCount}</p>
+            <div className="text-4xl font-bold">{stats.totalCount}</div>
           </CardContent>
         </Card>
+        
         <Card>
-          <CardHeader>
-            <CardTitle>Cân nặng trung bình</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Cân nặng trung bình</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stats.averageWeight.toFixed(2)}g</p>
+            <div className="text-4xl font-bold">{stats.avgWeight.toFixed(2)}g</div>
           </CardContent>
         </Card>
+        
         <Card>
-          <CardHeader>
-            <CardTitle>Thể tích trung bình</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Thể tích trung bình</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stats.averageVolume.toFixed(2)}cm³</p>
+            <div className="text-4xl font-bold">{stats.avgVolume.toFixed(2)}cm<sup>3</sup></div>
           </CardContent>
         </Card>
       </div>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardHeader>
             <CardTitle>Phân tích phân loại</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">Phân bố theo loại</p>
           </CardHeader>
-          <CardContent>
-            <h3 className="text-lg font-medium mb-4">Phân bố theo loại</h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+          <CardContent className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={stats.pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  outerRadius={120}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {stats.pieData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={COLORS[index % COLORS.length]} 
+                    />
+                  ))}
+                  <Label 
+                    position="center" 
+                    content={({ viewBox }) => {
+                      const { cx, cy } = viewBox as { cx: number; cy: number };
+                      return stats.pieData.map((entry, index) => (
+                        <text
+                          key={`label-${index}`}
+                          x={cx + Math.cos(Math.PI * 2 * (index / stats.pieData.length)) * 150}
+                          y={cy + Math.sin(Math.PI * 2 * (index / stats.pieData.length)) * 150}
+                          textAnchor="middle"
+                          fill={COLORS[index % COLORS.length]}
+                          fontSize={16}
+                          fontWeight="bold"
+                        >
+                          {entry.value}
+                        </text>
+                      ));
+                    }}
+                  />
+                </Pie>
+                <Tooltip formatter={(value) => [`${value} xoài`, 'Số lượng']} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader>
             <CardTitle>Phân tích chi tiết</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">Phân bố cân nặng</p>
           </CardHeader>
           <CardContent>
-            <h3 className="text-lg font-medium mb-4">Phân bố cân nặng</h3>
             <div className="space-y-4">
-              {Object.entries(stats.typeDistribution).map(([type, data]) => (
-                <div key={type} className="p-4 border rounded-lg">
+              {stats.typeStats.map((stat) => (
+                <div key={stat.type} className="border rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
-                    <Badge variant="outline">{type}</Badge>
-                    <span className="text-sm font-medium">{data.count} mangoes</span>
+                    <div className="bg-gray-100 px-3 py-1 rounded-full text-sm font-medium">
+                      {stat.type}
+                    </div>
+                    <div className="text-right">{stat.count} mangoes</div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-gray-600">Percentage</p>
-                      <p className="font-medium">{data.percentage.toFixed(1)}%</p>
+                      <div className="text-sm text-gray-500">Percentage</div>
+                      <div className="font-semibold">{stat.percentage.toFixed(1)}%</div>
                     </div>
                     <div>
-                      <p className="text-gray-600">Avg Weight</p>
-                      <p className="font-medium">{data.averageWeight.toFixed(1)}g</p>
+                      <div className="text-sm text-gray-500">Avg Weight</div>
+                      <div className="font-semibold">{stat.avgWeight.toFixed(1)}g</div>
                     </div>
                     <div>
-                      <p className="text-gray-600">Avg Volume</p>
-                      <p className="font-medium">{data.averageVolume.toFixed(1)}cm³</p>
+                      <div className="text-sm text-gray-500">Avg Volume</div>
+                      <div className="font-semibold">{stat.avgVolume.toFixed(1)}cm<sup>3</sup></div>
                     </div>
                   </div>
                 </div>
@@ -212,24 +259,15 @@ export default function StatisticsPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Weight Distribution</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={stats.weightRanges}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="range" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
     </div>
+  )
+}
+
+export default function StatisticsPage() {
+  return (
+    <ProtectedRoute>
+      <StatisticsContent />
+    </ProtectedRoute>
   )
 }
 

@@ -58,10 +58,12 @@ export default function UserProfileDialog({ open, onOpenChange }: UserProfileDia
                 <Avatar className="h-24 w-24">
                   <AvatarImage src={user.avatar || undefined} />
                   <AvatarFallback className="bg-gray-200 text-gray-700 text-2xl">
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                    {user.name && typeof user.name === 'string' 
+                      ? user.name
+                          .split(" ")
+                          .map((n) => n[0] || '')
+                          .join("")
+                      : "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute bottom-0 right-0 bg-gray-800 rounded-full p-1.5 cursor-pointer hover:bg-gray-700 transition-colors">
