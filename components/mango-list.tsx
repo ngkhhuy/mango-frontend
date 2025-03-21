@@ -1,3 +1,5 @@
+"use client"
+
 import Image from 'next/image';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +17,13 @@ export default function MangoList({ mangoes }: MangoListProps) {
   const getTypeColor = (type: string) => {
     switch (type) {
       case "Type 1":
-        return "bg-green-100 text-green-800"
+        return "bg-green-500"
       case "Type 2":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-500"
       case "Extra Class":
-        return "bg-blue-100 text-blue-800"
+        return "bg-red-500"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-500"
     }
   }
 
@@ -42,21 +44,29 @@ export default function MangoList({ mangoes }: MangoListProps) {
     return <div>No mangoes data available</div>;
   }
 
+  if (!mangoes || mangoes.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-muted-foreground">Không có dữ liệu xoài</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
       {mangoes.map((mango) => (
         <Card key={mango._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-          <div className="relative h-64">
+          <div className="relative h-48 md:h-64">
             <Image
               src={mango.imageUrl}
               alt={`Xoài ${mango._id}`}
               fill
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-black bg-opacity-40 p-4 flex flex-col justify-between">
+            <div className="absolute inset-0 bg-black bg-opacity-40 p-3 md:p-4 flex flex-col justify-between">
               {/* Top section */}
               <div className="flex justify-between items-start">
-                <Badge className={`${getTypeColor(mango.classify)} text-sm font-medium`}>
+                <Badge className={`${getTypeColor(mango.classify)} text-xs md:text-sm font-medium`}>
                   {mango.classify}
                 </Badge>
                 <div className="text-white text-xs">
@@ -65,14 +75,14 @@ export default function MangoList({ mangoes }: MangoListProps) {
               </div>
               
               {/* Bottom section */}
-              <div className="space-y-2">
+              <div className="space-y-1 md:space-y-2">
                 <div className="flex justify-between items-center text-white">
-                  <span className="text-sm font-medium">Cân nặng:</span>
-                  <span className="text-sm">{mango.weight}g</span>
+                  <span className="text-xs md:text-sm font-medium">Cân nặng:</span>
+                  <span className="text-xs md:text-sm">{mango.weight}g</span>
                 </div>
                 <div className="flex justify-between items-center text-white">
-                  <span className="text-sm font-medium">Thể tích:</span>
-                  <span className="text-sm">{mango.volume}cm³</span>
+                  <span className="text-xs md:text-sm font-medium">Thể tích:</span>
+                  <span className="text-xs md:text-sm">{mango.volume}cm³</span>
                 </div>
               </div>
             </div>

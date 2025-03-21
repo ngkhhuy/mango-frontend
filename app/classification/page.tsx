@@ -91,17 +91,18 @@ function ClassificationContent() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">Phân loại xoài</h1>
+    <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-0">Phân loại xoài</h1>
         
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {filterTypes.map(type => (
             <Button
               key={type}
               variant={selectedType === type ? "default" : "outline"}
               onClick={() => setSelectedType(type)}
-              className="rounded-full"
+              className="rounded-full text-xs md:text-sm py-1 px-3 md:py-2 md:px-4"
+              size="sm"
             >
               {type}
             </Button>
@@ -109,17 +110,18 @@ function ClassificationContent() {
           
           <Button 
             variant="outline" 
-            className="ml-2 flex items-center gap-1"
+            className="ml-auto md:ml-2 flex items-center gap-1 text-xs md:text-sm"
             onClick={exportToCSV}
+            size="sm"
           >
-            <Download className="h-4 w-4" />
+            <Download className="h-3 w-3 md:h-4 md:w-4" />
             Xuất CSV
           </Button>
         </div>
       </div>
 
       <div className="mb-4">
-        <Badge variant="outline" className="text-sm">
+        <Badge variant="outline" className="text-xs md:text-sm">
           {filteredMangoes.length} xoài {selectedType !== "All" ? `loại ${selectedType}` : ""}
         </Badge>
       </div>

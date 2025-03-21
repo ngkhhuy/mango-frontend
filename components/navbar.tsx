@@ -24,8 +24,10 @@ import {
   Home,
   ListFilter,
   LogOut,
+  Menu,
   Settings,
   User,
+  X,
 } from "lucide-react"
 
 interface UserData {
@@ -39,6 +41,7 @@ export default function Navbar() {
   const pathname = usePathname()
   const [user, setUser] = useState<UserData | null>(null)
   const [isClient, setIsClient] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
@@ -75,6 +78,11 @@ export default function Navbar() {
     return () => window.removeEventListener('storage', checkAuth)
   }, [])
 
+  // Đóng menu mobile khi chuyển trang
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
   const handleLogout = () => {
     localStorage.removeItem("authToken")
     sessionStorage.removeItem("authToken")
@@ -110,8 +118,8 @@ export default function Navbar() {
           Mango System
         </Link>
         
-        {/* Menu chính ở giữa */}
-        <div className="flex-1 flex justify-center">
+        {/* Menu chính ở giữa - Hiển thị trên desktop */}
+        <div className="hidden md:flex flex-1 justify-center">
           <div className="flex">
             {links.map((link) => {
               const LinkIcon = link.icon
@@ -132,6 +140,22 @@ export default function Navbar() {
               )
             })}
           </div>
+        </div>
+        
+        {/* Nút menu mobile */}
+        <div className="flex-1 flex justify-end md:hidden">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="h-9 w-9"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
         </div>
         
         {/* Các nút bên phải */}
@@ -175,6 +199,32 @@ export default function Navbar() {
           )}
         </div>
       </div>
+      
+      {/* Menu mobile */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t">
+          <div className="container py-3">
+            {links.map((link) => {
+              const LinkIcon = link.icon
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "flex items-center px-4 py-3 text-base font-medium transition-colors hover:text-primary",
+                    pathname === link.href
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <LinkIcon className="mr-3 h-5 w-5" />
+                  {link.name}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </nav>
   )
 }
