@@ -28,6 +28,7 @@ import {
   Settings,
   User,
   X,
+  Scan,
 } from "lucide-react"
 
 interface UserData {
@@ -107,6 +108,11 @@ export default function Navbar() {
       name: "Thống kê",
       href: "/statistics",
       icon: BarChart3,
+    },
+    {
+      name: "Quét xoài",
+      href: "/scan",
+      icon: Scan,
     },
   ]
 
