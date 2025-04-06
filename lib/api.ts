@@ -1,6 +1,6 @@
 import { Mango } from "@/types/mango";
 
-const API_URL = 'https://mango-backend-fnhz.onrender.com/api';
+const API_URL = 'https://mango-backend-ub33.onrender.com/api';
 
 export async function getMangoes(): Promise<Mango[]> {
   try {
