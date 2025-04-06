@@ -23,7 +23,7 @@ export default function LoginScreen() {
     try {
       console.log("Đang gửi yêu cầu đăng nhập với username:", username)
       
-      const response = await fetch("https://mango-backend-fnhz.onrender.com/api/auth/login", {
+      const response = await fetch("https://mango-backend-ub33.onrender.com/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
