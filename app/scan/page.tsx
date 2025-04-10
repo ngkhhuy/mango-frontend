@@ -112,15 +112,15 @@ export default function ScanPage() {
   return (
     <div className="container mx-auto px-4 py-6 sm:py-8">
       <header className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Mango Scanner</h1>
-        <p className="text-sm sm:text-base text-gray-600">Upload a mango image to classify its type and quality</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Quét ảnh</h1>
+        <p className="text-sm sm:text-base text-gray-600">Tải lên một bức ảnh quả xoài để phân loại chất lượng</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         <Card>
           <CardHeader className="pb-2 sm:pb-4">
-            <CardTitle>Upload Image</CardTitle>
-            <CardDescription>Drag and drop a mango image or click to browse</CardDescription>
+            <CardTitle>Tải ảnh lên</CardTitle>
+            <CardDescription></CardDescription>
           </CardHeader>
           <CardContent>
             <div
@@ -149,16 +149,16 @@ export default function ScanPage() {
           <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
             <Button variant="outline" onClick={resetScan} disabled={!file} className="w-full sm:w-auto">
               <RefreshCw className="mr-2 h-4 w-4" />
-              Reset
+              Làm lại
             </Button>
             <Button onClick={analyzeImage} disabled={!file || isAnalyzing} className="w-full sm:w-auto">
               {isAnalyzing ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing...
+                  Đang phân tích...
                 </>
               ) : (
-                "Analyze Image"
+                "Phân tích ảnh"
               )}
             </Button>
           </CardFooter>
@@ -166,11 +166,11 @@ export default function ScanPage() {
 
         <Card>
           <CardHeader className="pb-2 sm:pb-4">
-            <CardTitle>Classification Result</CardTitle>
+            <CardTitle>Kết quả phân loại</CardTitle>
             <CardDescription>
               {result
-                ? "Analysis complete. See the classification details below."
-                : "Upload and analyze an image to see results"}
+                ? "Phân tích thành công, xem kết quả phía dưới"
+                : "Tải ảnh lên để phân tích và xem kết quả"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -229,9 +229,9 @@ export default function ScanPage() {
                 <div className="bg-gray-100 p-3 sm:p-4 rounded-full mb-3 sm:mb-4">
                   <Scan className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                 </div>
-                <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-1">No Results Yet</h3>
+                <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-1">Chưa có kết quả</h3>
                 <p className="text-sm text-gray-500 max-w-xs">
-                  Upload a mango image and click "Analyze Image" to get classification results
+                Tải lên hình ảnh xoài và nhấp vào "Phân tích hình ảnh" để nhận kết quả phân loại
                 </p>
               </div>
             )}
@@ -243,34 +243,32 @@ export default function ScanPage() {
       <div className="mt-6 sm:mt-8">
         <Card>
           <CardHeader>
-            <CardTitle>About Mango Classification</CardTitle>
+            <CardTitle>Giới thiệu về phân loại xoài</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
                 <Badge className="bg-green-100 text-green-800">Type 1</Badge>
-                <h3 className="font-medium">Premium Quality</h3>
+                <h3 className="font-medium">Chất lượng cao cấp</h3>
                 <p className="text-sm text-gray-600">
-                  Perfect ripeness, excellent color, no blemishes, ideal weight, and superior taste profile. These
-                  mangoes command the highest market price.
+                Độ chín hoàn hảo, màu sắc tuyệt hảo, không tì vết, trọng lượng lý tưởng và hương vị tuyệt hảo. Những quả xoài này có giá thị trường cao nhất.
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Badge className="bg-yellow-100 text-yellow-800">Type 2</Badge>
-                <h3 className="font-medium">Standard Quality</h3>
+                <h3 className="font-medium">Chất lượng bình thường</h3>
                 <p className="text-sm text-gray-600">
-                  Good ripeness, acceptable color, minor blemishes, and standard weight. These mangoes are suitable for
-                  regular retail and wholesale markets.
+                Độ chín tốt, màu sắc chấp nhận được, ít tì vết và trọng lượng chuẩn. Những quả xoài này phù hợp cho
+                các thị trường bán lẻ và bán buôn thông thường.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Badge className="bg-red-100 text-red-800">Extra Class</Badge>
+                <Badge className="bg-red-100 text-red-800">Chất lượng đặc biệt</Badge>
                 <h3 className="font-medium">Processing Quality</h3>
                 <p className="text-sm text-gray-600">
-                  Overripe or underripe, color defects, visible blemishes, or irregular weight. These mangoes are best
-                  used for juices, purees, or other processed products.
+                  Những quả có chất lượng tốt nhất trên thị trường
                 </p>
               </div>
             </div>
