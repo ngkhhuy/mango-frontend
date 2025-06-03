@@ -72,9 +72,9 @@ export default function Home() {
     return (
       <div className="container mx-auto px-4 py-8">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Hệ thống phân loại, thống kê và đánh giá chất lượng xoài</h1>
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">Kết quả phân loại, thống kê và đánh giá chất lượng xoài</h1>
         </header>
-        <MangoList mangoes={mangoes} />
+        <MangoList mangoes={mangoes} showVolume={false} />
       </div>
     );
   }

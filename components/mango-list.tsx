@@ -8,9 +8,10 @@ import type { Mango } from '@/types/mango';
 
 interface MangoListProps {
   mangoes: Mango[];
+  showVolume?: boolean;  // Thêm prop tùy chọn
 }
 
-export default function MangoList({ mangoes }: MangoListProps) {
+export default function MangoList({ mangoes, showVolume = true }: MangoListProps) {
   // Debug log để xem cấu trúc dữ liệu
   console.log('Raw mangoes data:', JSON.stringify(mangoes, null, 2));
 
@@ -80,10 +81,12 @@ export default function MangoList({ mangoes }: MangoListProps) {
                   <span className="text-xs md:text-sm font-medium">Cân nặng:</span>
                   <span className="text-xs md:text-sm">{mango.weight}g</span>
                 </div>
-                <div className="flex justify-between items-center text-white">
-                  <span className="text-xs md:text-sm font-medium">Thể tích:</span>
-                  <span className="text-xs md:text-sm">{mango.volume}cm³</span>
-                </div>
+                {showVolume && (
+                  <div className="flex justify-between items-center text-white">
+                    <span className="text-xs md:text-sm font-medium">Thể tích:</span>
+                    <span className="text-xs md:text-sm">{mango.volume}cm³</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

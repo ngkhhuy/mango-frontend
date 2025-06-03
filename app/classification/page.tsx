@@ -46,8 +46,8 @@ function ClassificationContent() {
     // Chỉ xuất dữ liệu đã lọc
     const dataToExport = filteredMangoes
     
-    // Tạo header cho CSV
-    const headers = ['ID', 'Tên', 'Loại', 'Cân nặng (g)', 'Thể tích (cm³)', 'Ngày tạo']
+    // Tạo header cho CSV (loại bỏ 'Thể tích (cm³)')
+    const headers = ['ID', 'Loại', 'Cân nặng (g)', 'Ngày tạo', 'Link ảnh']
     
     // Chuyển đổi dữ liệu thành định dạng CSV
     const csvRows = []
@@ -55,11 +55,11 @@ function ClassificationContent() {
     
     dataToExport.forEach(mango => {
       const row = [
-        mango.id,
+        mango._id || mango.id,
         mango.classify || 'N/A',
         mango.weight || '0',
-        mango.volume || '0',
-        mango.createdAt || 'N/A'
+        mango.createdAt || 'N/A',
+        mango.imageUrl || 'N/A'  // Thêm link ảnh
       ]
       csvRows.push(row.join(','))
     })
@@ -126,7 +126,7 @@ function ClassificationContent() {
         </Badge>
       </div>
 
-      <MangoList mangoes={filteredMangoes} />
+      <MangoList mangoes={filteredMangoes} showVolume={false} />
     </div>
   )
 }

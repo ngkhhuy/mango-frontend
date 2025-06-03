@@ -16,7 +16,7 @@ interface TypeStats {
   count: number;
   percentage: number;
   avgWeight: number;
-  avgVolume: number;
+  // Loại bỏ avgVolume
 }
 
 function StatisticsContent() {
@@ -26,7 +26,7 @@ function StatisticsContent() {
   const [stats, setStats] = useState({
     totalCount: 0,
     avgWeight: 0,
-    avgVolume: 0,
+    // Loại bỏ avgVolume
     typeStats: [] as TypeStats[],
     pieData: [] as { name: string; value: number }[]
   })
@@ -52,7 +52,7 @@ function StatisticsContent() {
       setStats({
         totalCount: 0,
         avgWeight: 0,
-        avgVolume: 0,
+        // Loại bỏ avgVolume: 0,
         typeStats: [],
         pieData: []
       })
@@ -68,12 +68,7 @@ function StatisticsContent() {
     }, 0)
     const avgWeight = totalCount > 0 ? totalWeight / totalCount : 0
     
-    // Tính thể tích trung bình tổng thể
-    const totalVolume = data.reduce((sum, mango) => {
-      const volume = typeof mango.volume === 'number' ? mango.volume : 0
-      return sum + volume
-    }, 0)
-    const avgVolume = totalCount > 0 ? totalVolume / totalCount : 0
+    // Loại bỏ phần tính thể tích trung bình
     
     // Nhóm xoài theo loại
     const typeGroups: Record<string, Mango[]> = {}
@@ -97,19 +92,14 @@ function StatisticsContent() {
       }, 0)
       const typeAvgWeight = count > 0 ? typeTotalWeight / count : 0
       
-      // Tính thể tích trung bình
-      const typeTotalVolume = mangoes.reduce((sum, mango) => {
-        const volume = typeof mango.volume === 'number' ? mango.volume : 0
-        return sum + volume
-      }, 0)
-      const typeAvgVolume = count > 0 ? typeTotalVolume / count : 0
+      // Loại bỏ phần tính thể tích trung bình
       
       return {
         type,
         count,
         percentage,
         avgWeight: typeAvgWeight,
-        avgVolume: typeAvgVolume
+        // Loại bỏ avgVolume: typeAvgVolume
       }
     })
     
@@ -125,7 +115,7 @@ function StatisticsContent() {
     setStats({
       totalCount,
       avgWeight,
-      avgVolume,
+      // Loại bỏ avgVolume,
       typeStats,
       pieData
     })
@@ -143,7 +133,8 @@ function StatisticsContent() {
     <div className="container mx-auto px-4 py-6 md:py-8">
       <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Thống kê xoài</h1>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+      {/* Chỉ hiển thị 2 cards thay vì 3 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base md:text-lg font-medium">Tổng số xoài</CardTitle>
@@ -162,14 +153,7 @@ function StatisticsContent() {
           </CardContent>
         </Card>
         
-        <Card className="sm:col-span-2 md:col-span-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base md:text-lg font-medium">Thể tích trung bình</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl md:text-4xl font-bold">{stats.avgVolume.toFixed(2)}cm<sup>3</sup></div>
-          </CardContent>
-        </Card>
+        {/* Loại bỏ card thể tích trung bình */}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -201,7 +185,6 @@ function StatisticsContent() {
                     content={({ viewBox }) => {
                       const { cx, cy } = viewBox as { cx: number; cy: number };
                       return stats.pieData.map((entry, index) => {
-                        // Điều chỉnh vị trí nhãn dựa trên kích thước màn hình
                         const radius = window.innerWidth < 768 ? 120 : 150;
                         return (
                           <text
@@ -243,6 +226,7 @@ function StatisticsContent() {
                     <div className="text-right text-xs md:text-sm">{stat.count} mangoes</div>
                   </div>
                   
+                  {/* Grid với 2 cột thay vì 3 cột */}
                   <div className="grid grid-cols-2 gap-3 md:gap-4">
                     <div>
                       <div className="text-xs md:text-sm text-gray-500">Percentage</div>
@@ -252,10 +236,7 @@ function StatisticsContent() {
                       <div className="text-xs md:text-sm text-gray-500">Avg Weight</div>
                       <div className="text-sm md:text-base font-semibold">{stat.avgWeight.toFixed(1)}g</div>
                     </div>
-                    <div>
-                      <div className="text-xs md:text-sm text-gray-500">Avg Volume</div>
-                      <div className="text-sm md:text-base font-semibold">{stat.avgVolume.toFixed(1)}cm<sup>3</sup></div>
-                    </div>
+                    {/* Loại bỏ phần hiển thị Avg Volume */}
                   </div>
                 </div>
               ))}
