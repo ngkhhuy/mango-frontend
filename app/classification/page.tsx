@@ -9,9 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import ProtectedRoute from "@/components/protected-route"
 import { Badge } from "@/components/ui/badge"
-import { Download } from "lucide-react"
+import { Download } from "lucide-react" 
 
-// Component chính được bọc trong Suspense
 function ClassificationContent() {
   const searchParams = useSearchParams()
   const [mangoes, setMangoes] = useState<Mango[]>([])
