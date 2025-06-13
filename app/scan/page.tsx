@@ -8,21 +8,37 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Scale, Thermometer, Upload, RefreshCw, Scan } from "lucide-react"
+import { Scale, Thermometer, Upload, RefreshCw, Scan, AlertCircle } from "lucide-react"
 import Image from "next/image"
 import type { Mango, MangoType } from "@/types/mango"
+import { Client } from "@gradio/client"
 
 export default function ScanPage() {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [result, setResult] = useState<Mango | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0]
+      
+      // Validate file size (limit to 10MB)
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        setError("File size must be less than 10MB")
+        return
+      }
+
+      // Validate file type
+      if (!selectedFile.type.startsWith('image/')) {
+        setError("Please select a valid image file")
+        return
+      }
+
       setFile(selectedFile)
+      setError(null)
 
       // Create preview
       const reader = new FileReader()
@@ -40,7 +56,21 @@ export default function ScanPage() {
     e.preventDefault()
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const droppedFile = e.dataTransfer.files[0]
+      
+      // Validate file size (limit to 10MB)
+      if (droppedFile.size > 10 * 1024 * 1024) {
+        setError("File size must be less than 10MB")
+        return
+      }
+
+      // Validate file type
+      if (!droppedFile.type.startsWith('image/')) {
+        setError("Please select a valid image file")
+        return
+      }
+
       setFile(droppedFile)
+      setError(null)
 
       // Create preview
       const reader = new FileReader()
@@ -58,38 +88,86 @@ export default function ScanPage() {
     e.preventDefault()
   }
 
-  const analyzeImage = () => {
+  const analyzeImage = async () => {
     if (!file) return
 
     setIsAnalyzing(true)
+    setError(null)
 
-    // Simulate API call with timeout
-    setTimeout(() => {
-      // Mock classification result
-      // In a real app, this would come from an API call to a machine learning model
-      const mangoTypes: MangoType[] = ["Type 1", "Type 2", "Extra Class"]
-      const randomType = mangoTypes[Math.floor(Math.random() * mangoTypes.length)]
+    try {
+      // Connect to Gradio API
+      const client = await Client.connect("ThahVinh/mango-classifier")
       
-      // Cập nhật để phù hợp với định nghĩa Mango trong codebase
-      const mockResult: Mango = {
-        id: String(Math.floor(Math.random() * 1000)), // Chuyển thành string
-        classify: randomType, // Sử dụng classify thay cho type
-        weight: Math.floor(Math.random() * (350 - 180) + 180), // Random weight between 180-350g
-        volume: Math.floor(Math.random() * (200 - 100) + 100), // Thêm volume
-        createdAt: new Date().toISOString(),
-        ripeness: randomType === "Type 1" ? "Perfect" : randomType === "Type 2" ? "Good" : "Overripe",
-        origin: "Scan Result"
-      }
+      // Call the predict endpoint
+      const result = await client.predict("/predict", {
+        image: file,
+      })
 
-      setResult(mockResult)
+      // Parse the API response
+      const apiResponse = (result.data as string[])[0]
+      console.log("API Response:", apiResponse)
+
+      // Parse the classification result
+      const parsedResult = parseClassificationResult(apiResponse)
+      
+      setResult(parsedResult)
+    } catch (error) {
+      console.error("Error analyzing image:", error)
+      setError("Failed to analyze image. Please try again.")
+    } finally {
       setIsAnalyzing(false)
-    }, 2000)
+    }
+  }
+
+  // Function to parse API response and convert to Mango object
+  const parseClassificationResult = (apiResponse: string): Mango => {
+    // The API response might be in format like "Type 1: 0.85" or just "Type 1"
+    // Parse based on the actual response format
+    let classifyType: MangoType = "Type 1"
+    let confidence = 0
+    
+    if (apiResponse.includes("Type 1")) {
+      classifyType = "Type 1"
+    } else if (apiResponse.includes("Type 2")) {
+      classifyType = "Type 2"
+    } else if (apiResponse.includes("Extra Class")) {
+      classifyType = "Extra Class"
+    }
+
+    // Extract confidence if available
+    const confidenceMatch = apiResponse.match(/(\d+\.?\d*)/)
+    if (confidenceMatch) {
+      confidence = parseFloat(confidenceMatch[1])
+      // If confidence is between 0-1, keep as is. If > 1, assume it's percentage and convert
+      if (confidence > 1) {
+        confidence = confidence / 100
+      }
+    }
+
+    // Only show classification result from API, no mock data
+    const result: Mango = {
+      id: String(Date.now()), // Use timestamp for unique ID
+      classify: classifyType,
+      weight: 0, // Not used, set to 0
+      volume: 0, // Not used, set to 0
+      createdAt: new Date().toISOString(),
+      ripeness: "", // Not used
+      origin: "AI Classification",
+      metadata: {
+        confidence: confidence,
+        color: "", // Not used
+        ripeness: "" // Not used
+      }
+    }
+
+    return result
   }
 
   const resetScan = () => {
     setFile(null)
     setPreview(null)
     setResult(null)
+    setError(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
@@ -113,16 +191,23 @@ export default function ScanPage() {
     <div className="container mx-auto px-4 py-6 sm:py-8">
       <header className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Quét ảnh</h1>
-        <p className="text-sm sm:text-base text-gray-600">Tải lên một bức ảnh quả xoài để phân loại chất lượng</p>
+        <p className="text-sm sm:text-base text-gray-600">Tải lên một bức ảnh quả xoài để phân loại chất lượng bằng AI</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         <Card>
           <CardHeader className="pb-2 sm:pb-4">
             <CardTitle>Tải ảnh lên</CardTitle>
-            <CardDescription></CardDescription>
+            <CardDescription>Hỗ trợ JPG, PNG, WEBP (tối đa 10MB)</CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center">
+                <AlertCircle className="h-4 w-4 text-red-500 mr-2" />
+                <span className="text-sm text-red-700">{error}</span>
+              </div>
+            )}
+            
             <div
               className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center ${
                 preview ? "border-gray-300" : "border-gray-400 hover:border-gray-500"
@@ -141,7 +226,7 @@ export default function ScanPage() {
                 <div className="py-8 sm:py-12">
                   <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
                   <p className="mt-2 text-sm text-gray-500">Click to browse or drag and drop</p>
-                  <p className="text-xs text-gray-400">Supports JPG, PNG, WEBP</p>
+                  <p className="text-xs text-gray-400">Supports JPG, PNG, WEBP (Max 10MB)</p>
                 </div>
               )}
             </div>
@@ -155,7 +240,7 @@ export default function ScanPage() {
               {isAnalyzing ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Đang phân tích...
+                  Đang phân tích bằng AI...
                 </>
               ) : (
                 "Phân tích ảnh"
@@ -169,7 +254,7 @@ export default function ScanPage() {
             <CardTitle>Kết quả phân loại</CardTitle>
             <CardDescription>
               {result
-                ? "Phân tích thành công, xem kết quả phía dưới"
+                ? "Phân tích thành công bằng AI, xem kết quả phía dưới"
                 : "Tải ảnh lên để phân tích và xem kết quả"}
             </CardDescription>
           </CardHeader>
@@ -181,46 +266,32 @@ export default function ScanPage() {
                   <Badge className={getTypeColor(result.classify)}>{result.classify}</Badge>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-                    <div className="flex items-center mb-2">
-                      <Scale className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-gray-500" />
-                      <span className="font-medium">Weight</span>
+                {result.metadata?.confidence && result.metadata.confidence > 0 && (
+                  <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium">AI Confidence</span>
+                      <span className="text-sm text-gray-600">{(result.metadata.confidence * 100).toFixed(1)}%</span>
                     </div>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-800">{result.weight}g</p>
-                  </div>
-
-                  <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-                    <div className="flex items-center mb-2">
-                      <Thermometer className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-gray-500" />
-                      <span className="font-medium">Ripeness</span>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full" 
+                        style={{ width: `${(result.metadata.confidence || 0) * 100}%` }}
+                      ></div>
                     </div>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-800">{result.metadata?.ripeness || "Unknown"}</p>
                   </div>
-                </div>
+                )}
 
                 <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-                  <Label className="mb-2 block">Color</Label>
-                  <div className="flex items-center">
-                    <div
-                      className="w-5 h-5 sm:w-6 sm:h-6 rounded-full mr-2 border border-gray-300"
-                      style={{
-                        backgroundColor:
-                          result.classify === "Type 1" ? "#FFD700" : result.classify === "Type 2" ? "#ADFF2F" : "#D2B48C",
-                      }}
-                    />
-                    <span>{result.metadata?.color || "Unknown"}</span>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-                  <Label className="mb-2 block">Quality Assessment</Label>
-                  <p className="text-xs sm:text-sm">
+                  <Label className="mb-2 block">AI Classification Result</Label>
+                  <p className="text-sm">
                     {result.classify === "Type 1"
-                      ? "Premium quality mango with excellent color, texture, and ripeness. Ideal for direct consumption and premium markets."
+                      ? "Phân loại: Loại 1 - Chất lượng cao cấp"
                       : result.classify === "Type 2"
-                        ? "Good quality mango with minor imperfections. Suitable for regular retail and processing."
-                        : "Lower quality mango with visible defects. Recommended for immediate processing or juice production."}
+                        ? "Phân loại: Loại 2 - Chất lượng bình thường"
+                        : "Phân loại: Đặc biệt - Chất lượng đặc biệt"}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Kết quả được phân tích bởi AI dựa trên hình ảnh đã tải lên
                   </p>
                 </div>
               </div>
@@ -231,7 +302,7 @@ export default function ScanPage() {
                 </div>
                 <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-1">Chưa có kết quả</h3>
                 <p className="text-sm text-gray-500 max-w-xs">
-                Tải lên hình ảnh xoài và nhấp vào "Phân tích hình ảnh" để nhận kết quả phân loại
+                Tải lên hình ảnh xoài và nhấp vào "Phân tích hình ảnh" để nhận kết quả phân loại bằng AI
                 </p>
               </div>
             )}
